@@ -205,9 +205,24 @@ restartBtn.addEventListener("click", () => {
 
 document.addEventListener("mousemove", (e) => {
   const rect = canvas.getBoundingClientRect();
-  const relativeX = e.clientX - rect.left;
+  const scale = canvas.width / rect.width;
+  const relativeX = (e.clientX - rect.left) * scale;
   paddleX = Math.min(Math.max(relativeX - paddleWidth / 2, 0), canvas.width - paddleWidth);
 });
+
+// Touch support for mobile
+canvas.addEventListener(
+  "touchmove",
+  (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvas.width / rect.width;
+    const touch = e.touches[0];
+    const relativeX = (touch.clientX - rect.left) * scale;
+    paddleX = Math.min(Math.max(relativeX - paddleWidth / 2, 0), canvas.width - paddleWidth);
+    e.preventDefault();
+  },
+  { passive: false }
+);
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") {

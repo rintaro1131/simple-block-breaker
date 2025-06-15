@@ -20,6 +20,9 @@ body {
   display: block;
   border: 2px solid #00e5ff;
   box-shadow: 0 0 10px #00e5ff;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
 }
 
 #score {
