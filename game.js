@@ -212,6 +212,14 @@ document.addEventListener("mousemove", (e) => {
 
 // Touch support for mobile
 canvas.addEventListener(
+  "touchstart",
+  (e) => {
+    e.preventDefault();
+  },
+  { passive: false }
+);
+
+canvas.addEventListener(
   "touchmove",
   (e) => {
     const rect = canvas.getBoundingClientRect();
