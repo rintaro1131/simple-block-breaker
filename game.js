@@ -17,8 +17,14 @@ const BRICK_OFFSET_LEFT = 35;
 
 const BRICK_COLORS = ["#ff4d4d", "#ffa64d", "#ffff4d"];
 
+// Stage management
+let currentStage = 1;
+const MAX_STAGE = 2;
+
+
 // Game state
 let paddleX;
+let paddleWidth = PADDLE_WIDTH; // dynamic width
 let ballX;
 let ballY;
 let ballDX;
@@ -40,16 +46,25 @@ function initBricks() {
   }
 }
 
-function resetGame() {
-  paddleX = (canvas.width - PADDLE_WIDTH) / 2;
+function resetGame(keepScore = false) {
+  // Adjust difficulty based on stage
+  if (currentStage === 1) {
+    paddleWidth = PADDLE_WIDTH;
+  } else {
+    paddleWidth = PADDLE_WIDTH * 0.75; // narrower paddle on stage 2
+  }
+  paddleX = (canvas.width - paddleWidth) / 2;
   ballX = canvas.width / 2;
   ballY = canvas.height - 60;
   // 45° angle: dx = speed / sqrt(2)
-  ballDX = BALL_SPEED * Math.cos(Math.PI / 4);
-  ballDY = -BALL_SPEED * Math.sin(Math.PI / 4);
-  score = 0;
+  const speedFactor = currentStage === 1 ? 1 : 1.5;
+  ballDX = BALL_SPEED * speedFactor * Math.cos(Math.PI / 4);
+  ballDY = -BALL_SPEED * speedFactor * Math.sin(Math.PI / 4);
+  if (!keepScore) {
+    score = 0;
+    scoreEl.textContent = score;
+  }
   playing = true;
-  scoreEl.textContent = 0;
   initBricks();
   removeMessage();
 }
@@ -58,7 +73,7 @@ function drawPaddle() {
   ctx.fillStyle = "#00e5ff";
   ctx.shadowColor = "#00e5ff";
   ctx.shadowBlur = 10;
-  ctx.fillRect(paddleX, canvas.height - PADDLE_HEIGHT - 10, PADDLE_WIDTH, PADDLE_HEIGHT);
+  ctx.fillRect(paddleX, canvas.height - PADDLE_HEIGHT - 10, paddleWidth, PADDLE_HEIGHT);
   ctx.shadowBlur = 0; // reset
 }
 
@@ -102,7 +117,7 @@ function collisionDetection() {
   if (
     ballY + BALL_RADIUS >= canvas.height - PADDLE_HEIGHT - 10 &&
     ballX > paddleX &&
-    ballX < paddleX + PADDLE_WIDTH
+    ballX < paddleX + paddleWidth
   ) {
     ballDY = -ballDY;
   } else if (ballY + BALL_RADIUS > canvas.height) {
@@ -169,23 +184,36 @@ function gameOver() {
 
 function win() {
   playing = false;
-  showMessage("YOU WIN");
+  if (currentStage < MAX_STAGE) {
+    showMessage(`STAGE ${currentStage} CLEARED`);
+    setTimeout(() => {
+      currentStage++;
+      resetGame(true);
+      playing = true;
+      draw();
+    }, 1500);
+  } else {
+    showMessage("YOU WIN");
+  }
 }
 
 // Event listeners
-restartBtn.addEventListener("click", resetGame);
+restartBtn.addEventListener("click", () => {
+  resetGame(); // keep currentStage as is
+  draw();
+});
 
 document.addEventListener("mousemove", (e) => {
   const rect = canvas.getBoundingClientRect();
   const relativeX = e.clientX - rect.left;
-  paddleX = Math.min(Math.max(relativeX - PADDLE_WIDTH / 2, 0), canvas.width - PADDLE_WIDTH);
+  paddleX = Math.min(Math.max(relativeX - paddleWidth / 2, 0), canvas.width - paddleWidth);
 });
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") {
     paddleX = Math.max(paddleX - 20, 0);
   } else if (e.key === "ArrowRight") {
-    paddleX = Math.min(paddleX + 20, canvas.width - PADDLE_WIDTH);
+    paddleX = Math.min(paddleX + 20, canvas.width - paddleWidth);
   }
 });
 
